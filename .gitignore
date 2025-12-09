@@ -1,0 +1,6 @@
+.env
+.venv
+.idea
+logs
+dbx_token
+__pycache__
