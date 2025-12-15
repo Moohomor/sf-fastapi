@@ -181,7 +181,7 @@ async def new_story(r: NewStoryRequest) -> Story:
                         f"('{r.name}',{sessions[r.sid]['uid']}) RETURNING *")
             row = cur.fetchone()
             conn.commit()
-            box_api.upload(r.content.encode('utf-8'), f'{os.environ['STORAGE_PREFIX']}/stories/{row[0]}.txt')
+            box_api.upload(r.content.encode('utf-8'), f'{os.environ['STORAGE_PREFIX']}/stories/{row[0]}.xml')
             return Story(**{k.name: v for k, v in zip(cur.description, row)}, reviews=[])
 
 @storage_router.post('/new_review')
@@ -204,7 +204,7 @@ async def story_content(r: GetByIdRequest):
             if row[0] and (r.sid is None or r.sid not in sessions or
                            sessions[r.sid]['uid'] != row[1]):
                 raise Exception400('Invalid session id')
-            return ContentResponse(content=box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/stories/{r.id}.txt'))
+            return ContentResponse(content=box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/stories/{r.id}.xml'))
 
 _order_by = {
     'best': 'votes, created_at, id',
@@ -233,7 +233,7 @@ async def update_story_content(r: UpdateStoryContentRequest):
             row = cur.fetchone()
             if r.sid is None or r.sid not in sessions or sessions[r.sid]['uid'] != row[1]:
                 raise Exception400('Invalid session id')
-    box_api.upload(r.content.encode(), f'{os.environ['STORAGE_PREFIX']}/stories/{r.id}.txt')
+    box_api.upload(r.content.encode(), f'{os.environ['STORAGE_PREFIX']}/stories/{r.id}.xml')
     return {"result": "OK"}
 
 @storage_router.post('/update_story_properties')
