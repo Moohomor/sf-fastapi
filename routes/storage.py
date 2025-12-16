@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from routes.auth import auth_required
 from datetime import datetime
 from enum import Enum
-from globals import conn, sessions
+from globals import get_conn, sessions
 from utils import Exception400
 import box_api
 from loguru import logger
@@ -139,6 +139,7 @@ async def user_by_id(r: GetByIdRequest) -> User:
 
 @storage_router.get('/random_story')
 async def random_story() -> Story:
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT * FROM sf.stories WHERE not private ORDER BY random() LIMIT 1")
@@ -150,6 +151,7 @@ async def random_story() -> Story:
 
 @storage_router.put('/story_by_id')
 async def story_by_id(r: GetByIdRequest) -> Story:
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT * FROM sf.stories WHERE id=\'{r.id}\'")
@@ -166,6 +168,7 @@ async def story_by_id(r: GetByIdRequest) -> Story:
 
 @storage_router.put('/review_by_id')
 async def review_by_id(r: GetByIdRequest) -> Review:
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT * FROM sf.reviews WHERE id=\'{r.id}\'")
@@ -175,6 +178,7 @@ async def review_by_id(r: GetByIdRequest) -> Review:
 @storage_router.post('/new_story')
 @auth_required
 async def new_story(r: NewStoryRequest) -> Story:
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute('INSERT INTO sf.stories (name, author) VALUES'
@@ -187,6 +191,7 @@ async def new_story(r: NewStoryRequest) -> Story:
 @storage_router.post('/new_review')
 @auth_required
 async def new_review(r: NewreviewRequest) -> Review:
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute('INSERT INTO sf.reviews (author, story, content) VALUES'
@@ -197,6 +202,7 @@ async def new_review(r: NewreviewRequest) -> Review:
 
 @storage_router.put('/story_content')
 async def story_content(r: GetByIdRequest):
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT private, author, id FROM sf.stories WHERE id='{r.id}'")
@@ -215,6 +221,7 @@ _order_by = {
 async def list_stories(r: ListStoriesRequest) -> ListStoriesResponse:
     """ATTENTION! This endpoint puts null/None into the reviews field.
     If you want get a specific user's stories, provide his SID."""
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             if r.listing_type.name == 'user' and (r.sid is None or r.sid not in sessions):
@@ -227,6 +234,7 @@ async def list_stories(r: ListStoriesRequest) -> ListStoriesResponse:
 
 @storage_router.post('/update_story_content')
 async def update_story_content(r: UpdateStoryContentRequest):
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT private, author, id FROM sf.stories WHERE id='{r.id}'")
@@ -238,6 +246,7 @@ async def update_story_content(r: UpdateStoryContentRequest):
 
 @storage_router.post('/update_story_properties')
 async def update_story_properties(r: UpdateStoryProperties):
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT author, id FROM sf.stories WHERE id=\'{r.id}\'")
@@ -288,6 +297,7 @@ async def increase_param(r: IncreaseParamRequest) -> IncreaseParamResponse:
     story = await story_by_id(GetByIdRequest(id=r.id))
     if r.sid not in sessions or story.author != sessions[r.sid]['uid']:
         raise Exception400('Invalid session id')
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"UPDATE sf.{r.type.name}\n"

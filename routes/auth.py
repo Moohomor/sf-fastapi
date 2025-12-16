@@ -7,7 +7,7 @@ from uuid import uuid4
 from loguru import logger
 import os
 from functools import wraps
-from globals import conn, sessions
+from globals import get_conn, sessions
 from utils import Exception400
 
 auth_router = APIRouter(prefix='/auth', tags=['Session management'])
@@ -34,6 +34,7 @@ class LoginResponse(BaseModel):
 async def reg(r: AuthRequest):
     """Asks login and password (both are strings).
     Returns {result:OK} on success and code 500 on error"""
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute('INSERT INTO sf.users (name, password) VALUES (%s, %s)',
@@ -46,6 +47,7 @@ async def reg(r: AuthRequest):
 async def login(r: AuthRequest) -> LoginResponse:
     """Asks login and password (both are strings).
     Returns {result:OK, 'sid': <session id>} on success and code 500 on error"""
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute("SELECT password, id FROM sf.users "
