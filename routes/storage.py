@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from routes.auth import auth_required
 from datetime import datetime
 from enum import Enum
+import dropbox
 from globals import get_conn, sessions
 from utils import Exception400
 import box_api
@@ -266,7 +267,16 @@ async def update_story_properties(r: UpdateStoryProperties):
 
 @storage_router.get('/asset_content/{story_id}/{name}')
 async def asset_content(story_id: int, name: str):
-    return Response(box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/{story_id}/{name}', decode=False))#, media_type="image/png")
+    try:
+        content = box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/{story_id}/{name}', decode=False))
+        return Response()
+    except dropbox.exceptions.ApiError as e:
+        loguru.info(str(e))
+        if e.is_path() and e.get_path().is_not_found():
+            return Response({"result":"Not found"}, status_code=404)
+        else:
+            raise e
+        
 
 @storage_router.post('/new_asset')
 async def new_asset(file: UploadFile, sid: str, story_id: int):
