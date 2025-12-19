@@ -269,13 +269,10 @@ async def update_story_properties(r: UpdateStoryProperties):
 async def asset_content(story_id: int, name: str):
     try:
         content = box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/{story_id}/{name}', decode=False)
-        return Response()
+        return Response(content)
     except dropbox.exceptions.ApiError as e:
         logger.info(str(e))
-        if e.is_path() and e.get_path().is_not_found():
-            return Response({"result":"Not found"}, status_code=404)
-        else:
-            raise e
+        return Response(box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/0/stub.png', decode=False))
         
 
 @storage_router.post('/new_asset')
