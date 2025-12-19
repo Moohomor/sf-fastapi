@@ -271,7 +271,7 @@ async def asset_content(story_id: int, name: str):
         content = box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/{story_id}/{name}', decode=False)
         return Response()
     except dropbox.exceptions.ApiError as e:
-        loguru.info(str(e))
+        logger.info(str(e))
         if e.is_path() and e.get_path().is_not_found():
             return Response({"result":"Not found"}, status_code=404)
         else:
