@@ -268,7 +268,7 @@ async def update_story_properties(r: UpdateStoryProperties):
 @storage_router.get('/asset_content/{story_id}/{name}')
 async def asset_content(story_id: int, name: str):
     try:
-        content = box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/{story_id}/{name}', decode=False))
+        content = box_api.file_content(f'{os.environ['STORAGE_PREFIX']}/assets/{story_id}/{name}', decode=False)
         return Response()
     except dropbox.exceptions.ApiError as e:
         loguru.info(str(e))
