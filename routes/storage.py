@@ -122,6 +122,7 @@ class DeletereviewRequest(BaseModel):
 
 @storage_router.put('/user_by_id')
 async def user_by_id(r: GetByIdRequest) -> User:
+    conn = get_conn()
     with conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT name FROM sf.users WHERE id=\'{r.id}\'")
